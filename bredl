@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lino Bredl - Terminal Portfolio</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: linear-gradient(135deg, #f7f7f7 0%, #dddddd 100%);
+      color: #333;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1.2rem;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      transition: background 0.5s, color 0.5s;
+    }
+    .dark-mode {
+      background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+      color: #eee;
+    }
+    .terminal {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      max-width: 850px;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      color: inherit;
+      animation: fadeIn 2s ease forwards;
+      opacity: 0;
+      transition: background 0.5s, color 0.5s, box-shadow 0.5s;
+    }
+    .dark-mode .terminal {
+      background: #222;
+      color: #eee;
+      box-shadow: 0 20px 50px rgba(0, 255, 255, 0.2);
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .circle {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .red { background: #ff5f56; }
+    .yellow { background: #ffbd2e; }
+    .green { background: #27c93f; }
+    .output {
+      white-space: pre-wrap;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      min-height: 250px;
+      overflow-y: auto;
+      max-height: 450px;
+    }
+    .dark-mode .output {
+      color: #eee;
+    }
+    .input {
+      width: 100%;
+      padding: 12px;
+      background: #f0f0f0;
+      border: none;
+      color: #333;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      outline: none;
+      transition: background 0.5s, color 0.5s;
+    }
+    .dark-mode .input {
+      background: #444;
+      color: #eee;
+    }
+    .button-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .command-button {
+      background: #00c2ff;
+      border: none;
+      padding: 10px 20px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      transition: background 0.3s;
+    }
+    .command-button:hover {
+      background: #00a0d1;
+    }
+    .dark-mode .command-button {
+      background: #007799;
+      color: #fff;
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, #00c2ff, #0077ff);
+      height: 8px;
+      width: 0;
+      border-radius: 4px;
+      transition: width 2s ease;
+      margin-top: 10px;
+    }
+    .highlight {
+      color: #00c2ff;
+    }
+    .blinking-caret {
+      border-right: 2px solid #00c2ff;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="terminal">
+  <div class="terminal-header">
+    <div class="circle red"></div>
+    <div class="circle yellow"></div>
+    <div class="circle green"></div>
+  </div>
+  <div class="output blinking-caret" id="output">
+&gt; Booting system...
+  </div>
+  <input class="input" type="text" id="input" placeholder="Enter command...">
+  <div class="progress-bar" id="progress-bar"></div>
+  <div class="button-container">
+    <button class="command-button" onclick="simulateCommand('help')">help</button>
+    <button class="command-button" onclick="simulateCommand('about')">about</button>
+    <button class="command-button" onclick="simulateCommand('projects')">projects</button>
+    <button class="command-button" onclick="simulateCommand('contact')">contact</button>
+    <button class="command-button" onclick="simulateCommand('socials')">socials</button>
+    <button class="command-button" onclick="simulateCommand('secret')">secret</button>
+    <button class="command-button" onclick="simulateCommand('download cv')">download cv</button>
+    <button class="command-button" onclick="toggleDarkMode()">toggle dark mode</button>
+  </div>
+</div>
+
+<script>
+  const output = document.getElementById('output');
+  const input = document.getElementById('input');
+  const progressBar = document.getElementById('progress-bar');
+
+  const bootMessages = [
+    'Welcome to the Terminal Portfolio of Lino Bredl.',
+    'System online.',
+    'Ready for exploration.',
+    'Type "help" to see available commands.'
+  ];
+
+  const bootHTML = [
+    '> Welcome to the <span class="highlight">Terminal Portfolio</span> of Lino Bredl.',
+    '> <span class="highlight">System online</span>.',
+    '> Ready for exploration.',
+    '> Type <span class="highlight">"help"</span> to see available commands.'
+  ];
+
+  let bootIndex = 0;
+
+  function typeLine(text, htmlVersion, callback) {
+    let i = 0;
+    output.innerHTML += '> ';
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        output.innerHTML += text.charAt(i);
+        i++;
+        output.scrollTop = output.scrollHeight;
+      } else {
+        output.innerHTML = output.innerHTML.replace(text, htmlVersion);
+        output.innerHTML += '\n';
+        clearInterval(interval);
+        callback();
+      }
+    }, 35);
+  }
+
+  function bootSequence() {
+    if (bootIndex < bootMessages.length) {
+      typeLine(bootMessages[bootIndex], bootHTML[bootIndex], () => {
+        bootIndex++;
+        bootSequence();
+      });
+    }
+  }
+
+  bootSequence();
+
+  input.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      const command = input.value.trim().toLowerCase();
+      input.value = '';
+      handleCommand(command);
+    }
+  });
+
+  function simulateCommand(cmd) {
+    input.value = cmd;
+    input.dispatchEvent(new KeyboardEvent('keydown', {'key':'Enter'}));
+  }
+
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+  }
+
+  function handleCommand(cmd) {
+    typeLine('> ' + cmd, '> ' + cmd, () => {
+      let response = '';
+      if (cmd === 'help') {
+        response = 'Available commands:\n- about\n- projects\n- contact\n- socials\n- secret\n- download cv';
+      } else if (cmd === 'about') {
+        response = '> name: Lino Bredl\n> profession: Creative Designer & Future Architect\n> mission: Building human-centered experiences through design, architecture, and innovation.';
+      } else if (cmd === 'projects') {
+        response = '> Project 1: Terminal Portfolio Experience (this website)\n> Project 2: YORA - Global Exchange Student Platform\n> Project 3: Architectural Sketch Series (upcoming)';
+      } else if (cmd === 'contact') {
+        response = '> email: hi@linobredl.com\n> website: linobredl.com';
+      } else if (cmd === 'socials') {
+        response = '> instagram: @linobredl\n> linkedin: linkedin.com/in/linobredl\n> website: linobredl.com';
+      } else if (cmd === 'secret') {
+        response = '> Secret unlocked: Vision beats everything. Stay future-driven.';
+      } else if (cmd === 'download cv') {
+        response = '> Download initializing...';
+        typeLine(response, response, () => {
+          progressBar.style.width = '100%';
+          setTimeout(() => {
+            typeLine('> Download complete.', '> Download complete.', () => {
+              progressBar.style.width = '0';
+            });
+          }, 2000);
+        });
+        return;
+      } else {
+        response = `> Unknown command: '${cmd}'\n> Type 'help' to see available commands.`;
+      }
+      typeLine(response, response, () => {});
+    });
+  }
+</script>
+
+</body>
+</html>
